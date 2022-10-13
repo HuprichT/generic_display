@@ -3,15 +3,17 @@ class ZCL_BC_VIEW_SALV_TABLE definition
   create public .
 
   PUBLIC SECTION.
-  INTERFACES: /ZOB/BC_ALV_REPORT_VIEW,
+  INTERFACES: zif_bc_alv_report_view,
               if_salv_csqt_content_manager. "Used to respond to calls from FuBa
-  ALIASES: set_column_attributes FOR /zob/bc_alv_report_view~set_column_attributes,
-           add_sort_criteria FOR /zob/bc_alv_report_view~add_sort_criteria,
-           display FOR /zob/bc_alv_report_view~display,
-           refresh_display FOR /zob/bc_alv_report_view~refresh_display,
-           create_container_prep_display FOR /zob/bc_alv_report_view~create_container_prep_display,
-           prepare_display_data FOR /ZOB/BC_ALV_REPORT_VIEW~PREPARE_DISPLAY_DATA,
-           application_specific_changes FOR /zob/bc_alv_report_view~application_specific_changes.
+  ALIASES: set_column_attributes FOR zif_bc_alv_report_view~set_column_attributes,
+           add_sort_criteria FOR zif_bc_alv_report_view~add_sort_criteria,
+           display FOR zif_bc_alv_report_view~display,
+           refresh_display FOR zif_bc_alv_report_view~refresh_display,
+           create_container_prep_display FOR zif_bc_alv_report_view~create_container_prep_display,
+           prepare_display_data FOR zif_bc_alv_report_view~PREPARE_DISPLAY_DATA,
+           application_specific_changes FOR zif_bc_alv_report_view~application_specific_changes,
+           set_striped_pattern FOR zif_bc_alv_report_view~set_striped_pattern,
+           set_no_merging FOR zif_bc_alv_report_view~set_no_merging.
   DATA:
   mo_alv_grid TYPE REF TO cl_salv_table,
   mo_controller TYPE REF TO /zob/bc_controller.
@@ -55,10 +57,8 @@ PRIVATE SECTION.
 
   METHODS set_list_header
     IMPORTING
-      !i_is_layout_list_header TYPE string .
+      !i_is_layout_list_header TYPE ZSBC_ALV_LAYOUT-list_header .
   METHODS optimise_column_width .
-  METHODS set_striped_pattern .
-  METHODS set_no_merging .
   METHODS set_checkbox
     IMPORTING
       !i_fieldname TYPE lvc_fname
@@ -157,7 +157,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD /zob/bc_alv_report_view~add_sort_criteria.
+  METHOD zif_bc_alv_report_view~add_sort_criteria.
     DATA:
       sort_sequence TYPE salv_de_sort_sequence.
 
@@ -180,14 +180,14 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD /zob/bc_alv_report_view~display.
+  METHOD zif_bc_alv_report_view~display.
 
   mo_alv_grid->display( ).
 
   ENDMETHOD.
 
 
-  METHOD /zob/bc_alv_report_view~prepare_display_data.
+  METHOD zif_bc_alv_report_view~prepare_display_data.
     initialize(
       EXPORTING
         id_report_name        = id_report_name
@@ -216,7 +216,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD /zob/bc_alv_report_view~set_column_attributes.
+  METHOD zif_bc_alv_report_view~set_column_attributes.
 * Preconditions
     CHECK id_field_name IS NOT INITIAL.
 
@@ -269,7 +269,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD /zob/bc_alv_report_view~application_specific_changes.
+  METHOD zif_bc_alv_report_view~application_specific_changes.
 **************************************************************
 * The model’s job is to say what fields can be drilled into
 * and what alternative names they have etc...
@@ -305,6 +305,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
           id_field_name = <fieldname>
           if_is_technical = abap_true
           ).
+        ENDLOOP.
 
           "Hidden Fields
           LOOP AT it_hidden ASSIGNING <fieldname>.
@@ -316,7 +317,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
           ENDLOOP.
 
           "Hotspots
-          LOOP AT it_hidden ASSIGNING <fieldname>.
+          LOOP AT it_hotspots ASSIGNING <fieldname>.
             set_column_attributes(
               EXPORTING
                 id_field_name   = <fieldname>
@@ -352,7 +353,6 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
             set_column_attributes( id_field_name = <fieldname>
                                     if_is_subtotal = abap_true ).
           ENDLOOP.
-        ENDLOOP.
 
 *Sort Criteria
         LOOP AT it_sort_criteria ASSIGNING <sort_crit>.
@@ -397,7 +397,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
 
 
   method handle_link_click.
-    RAISE EVENT /ZOB/BC_ALV_REPORT_VIEW~user_command_received
+    RAISE EVENT zif_bc_alv_report_view~user_command_received
         EXPORTING
             ed_user_command = mc_user_command_click_on_cell
             ed_row = row
@@ -406,7 +406,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
 
 
   method HANDLE_USER_COMMAND.
-  RAISE EVENT /ZOB/BC_ALV_REPORT_VIEW~user_command_received
+  RAISE EVENT zif_bc_alv_report_view~user_command_received
     EXPORTING ed_user_command = e_salv_function.
   endmethod.
 
@@ -564,8 +564,18 @@ ENDTRY.
   ENDMETHOD.
 
 
-  METHOD set_no_merging.
+  METHOD zif_bc_alv_report_view~set_no_merging.
+*--------------------------------------------------------------------*
+* The default behaviour for any ALV grid is to merge cells which
+* have the same value with the cells immediately below them, e.g.
+* if every cell in a column had the same value, you would just see
+* one great big, very tall, cell
+* Sometimes you want to switch that setting off, so every value lives
+* inside it's own cell
+*--------------------------------------------------------------------*
+  mo_settings = mo_alv_grid->get_display_settings( ).
 
+  mo_settings->set_no_merging( abap_true ).
   ENDMETHOD.
 
 
@@ -581,7 +591,13 @@ ENDTRY.
   ENDMETHOD.
 
 
-  METHOD set_striped_pattern.
+  METHOD zif_bc_alv_report_view~set_striped_pattern.
+
+    IF mo_settings IS NOT BOUND.
+      mo_settings = mo_alv_grid->get_display_settings( ).
+    ENDIF.
+
+    mo_settings->set_striped_pattern( abap_true ).
 
   ENDMETHOD.
 
@@ -627,7 +643,7 @@ ENDTRY.
     CATCH cx_salv_not_found.
     ENDTRY.
   ENDMETHOD.
-  METHOD /zob/bc_alv_report_view~refresh_display.
+  METHOD zif_bc_alv_report_view~refresh_display.
 * Local Variables
 DATA: stable_refresh_info TYPE lvc_s_stbl.
     "I am going to be mad and suggest that when a user refreshes
@@ -639,7 +655,7 @@ DATA: stable_refresh_info TYPE lvc_s_stbl.
     mo_alv_grid->refresh( s_stable = stable_refresh_info ).
   ENDMETHOD.
 
-  METHOD /zob/bc_alv_report_view~create_container_prep_display.
+  METHOD zif_bc_alv_report_view~create_container_prep_display.
 
     md_report_name = id_report_name.
     md_edit_control_field = id_edit_control_field.
@@ -676,7 +692,7 @@ DATA: stable_refresh_info TYPE lvc_s_stbl.
 FIELD-SYMBOLS: <lt_data_table> TYPE ANY TABLE.
 ASSIGN mt_data_table->* TO <lt_data_table>.
 
-/zob/bc_alv_report_view~prepare_display_data(
+zif_bc_alv_report_view~prepare_display_data(
 EXPORTING
 id_report_name = md_report_name
 if_start_in_edit_mode = mf_start_in_edit_mode

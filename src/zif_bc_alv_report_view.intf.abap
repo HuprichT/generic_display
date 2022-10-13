@@ -122,4 +122,16 @@ interface ZIF_BC_ALV_REPORT_VIEW
        IT_SUBTOTALS type LVC_T_FNAM optional
        IT_FIELD_TEXTS type ZTY_ALV_TEXTS optional
        IT_SORT_CRITERIA type ZTY_BC_ALV_SORT_CRITERIAS optional .
+  methods SET_STRIPED_PATTERN .
+  methods SET_NO_MERGING .
+    "!
+    "! @parameter ID_SELECTION_TYPE |
+    "! SINGLE      Individual selection      1
+    "! MULTIPLE    Mult. Selection           2
+    "! CELL        Cell Selection            3
+    "! ROW_COLUMN  Line and Column Selection 4
+    "! NONE        No Selection              0
+    METHODS set_selections
+        importing
+      !ID_SELECTION_TYPE type I default 0 .
 endinterface.
