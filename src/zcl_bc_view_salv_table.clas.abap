@@ -312,7 +312,7 @@ CLASS ZCL_BC_VIEW_SALV_TABLE IMPLEMENTATION.
             set_column_attributes(
               EXPORTING
                 id_field_name   = <fieldname>
-                if_is_visible = abap_true
+                if_is_visible = abap_false
             ).
           ENDLOOP.
 
@@ -493,7 +493,17 @@ ENDTRY.
 
 
   METHOD set_hotspot.
+*--------------------------------------------------------------------*
+* Listing 10.11: - SET_HOTSPOT Method
+*--------------------------------------------------------------------*
+  TRY.
+      mo_column ?= mo_columns->get_column( i_id_field_name ).
 
+      mo_column->set_cell_type( if_salv_c_cell_type=>hotspot ).
+
+    CATCH cx_salv_not_found INTO DATA(not_found).
+
+  ENDTRY.
   ENDMETHOD.
 
 
@@ -737,4 +747,16 @@ ct_data_table = <lt_data_table> ).
     ENDTRY.
   ENDMETHOD.
 
+METHOD ZIF_BC_ALV_REPORT_VIEW~SET_SELECTIONS.
+*--------------------------------------------------------------------*
+* SINGLE      Individual selection      1
+* MULTIPLE    Mult. Selection           2
+* CELL        Cell Selection            3
+* ROW_COLUMN  Line and Column Selection 4
+* NONE        No Selection              0
+*--------------------------------------------------------------------*
+    mo_selections = mo_alv_grid->get_selections( ).
+    mo_selections->set_selection_mode( cl_salv_selections=>single ).
+
+  ENDMETHOD.                    "SET_SELECTIONS
 ENDCLASS.

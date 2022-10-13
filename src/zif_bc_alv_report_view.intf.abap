@@ -126,11 +126,11 @@ interface ZIF_BC_ALV_REPORT_VIEW
   methods SET_NO_MERGING .
     "!
     "! @parameter ID_SELECTION_TYPE |
-    "! SINGLE      Individual selection      1
-    "! MULTIPLE    Mult. Selection           2
-    "! CELL        Cell Selection            3
-    "! ROW_COLUMN  Line and Column Selection 4
-    "! NONE        No Selection              0
+    "! SINGLE      Individual selection     1 <br/>
+    "! MULTIPLE    Mult. Selection           2 <br/>
+    "! CELL        Cell Selection            3 <br/>
+    "! ROW_COLUMN  Line and Column Selection 4 <br/>
+    "! NONE        No Selection              0 <br/>
     METHODS set_selections
         importing
       !ID_SELECTION_TYPE type I default 0 .
