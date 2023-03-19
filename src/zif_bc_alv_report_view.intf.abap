@@ -38,7 +38,7 @@ interface ZIF_BC_ALV_REPORT_VIEW
     "! @parameter if_is_a_checkbox | Is the Field a checkbox?
     "! @parameter if_is_a_button | Is the Field a push button?
     "! @parameter if_is_hotspot | Can you drill down?
-    "! @parameter if_is_subtotal | Do we want a subtotal?
+    "! @parameter if_is_subtotal | Do we want a subtotal??
     "! @parameter id_short_text | Replace Short Text
     "! @parameter id_medium_text | Replace Medium Text
     "! @parameter id_long_text | Replace long text
